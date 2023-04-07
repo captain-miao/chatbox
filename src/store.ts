@@ -82,7 +82,7 @@ export default function useStore() {
     useEffect(() => {
         readSettings().then((settings) => {
             _setSettings(settings)
-            if (settings.openaiKey === '') {
+            if (settings.openaiKey === '' && settings.apiHost === 'https://api.openai.com' ) {
                 setNeedSetting(true)
             }
             i18n.changeLanguage(settings.language).then();
