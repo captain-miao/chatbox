@@ -133,6 +133,9 @@ function Main() {
 
     const [sessionClean, setSessionClean] = React.useState<Session | null>(null);
 
+    const editCurrentSession = () => {
+        setConfigureChatConfig(store?.currentSession)
+    };
     const generateName = async (session: Session) => {
         client.replay(
             store.settings.openaiKey,
@@ -345,7 +348,9 @@ function Main() {
                                     <ChatBubbleOutlineOutlinedIcon />
                                 </IconButton>
                                 <Typography variant="h6" color="inherit" component="div" noWrap sx={{ flexGrow: 1 }}>
-                                    {store.currentSession.name}
+                                    <span onClick={()=>{editCurrentSession()}} style={{cursor: 'pointer'}}>
+                                        {store.currentSession.name}
+                                    </span>
                                 </Typography>
                                 <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}
                                     onClick={() => setSessionClean(store.currentSession)}
