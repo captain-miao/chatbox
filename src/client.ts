@@ -2,6 +2,11 @@ import { Message } from './types';
 import * as wordCount from './utils';
 import { createParser } from 'eventsource-parser'
 
+function generateTargetUrl(host: string): string {
+    const defaultHost = "https://api.openai.com";
+    return host !== defaultHost ? host : `${host}/v1/chat/completions`;
+}
+
 export interface OnTextCallbackResult {
     // response content
     text: string;
@@ -57,12 +62,22 @@ export async function replay(
     let fullText = '';
     try {
         const messages = prompts.map(msg => ({ role: msg.role, content: msg.content }))
-        const response = await fetch(`${host}/v1/chat/completions`, {
+
+        const targetUrl: string = generateTargetUrl(host);
+        console.log(targetUrl);
+
+        const headers: { [key: string]: string } = {
+            'Content-Type': 'application/json',
+        };
+
+        if (apiKey) {
+            headers['Authorization'] = `Bearer ${apiKey}`;
+        }
+
+
+        const response = await fetch(`${targetUrl}`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
             body: JSON.stringify({
                 messages,
                 model: modelName,
