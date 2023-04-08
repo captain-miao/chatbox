@@ -51,7 +51,7 @@
                 "icons/icon.icns",
                 "icons/icon.ico"
             ],
-            "identifier": "xyz.chatboxapp.app",
+            "identifier": "com.extstar.chat.assistant",
             "longDescription": "",
             "macOS": {
                 "entitlements": null,
@@ -75,8 +75,8 @@
         "updater": {
             "active": true,
             "endpoints": [
-                "https://gist.githubusercontent.com/captain-miao/cf0b7684e28b30d760ba02417bbac916/raw/chatbox.releases.json",
-                "https://gist.githubusercontent.com/captain-miao/cf0b7684e28b30d760ba02417bbac916/raw"
+                "https://gist.githubusercontent.com/captain-miao/3832ae4134bde608d7b7cf16ca61f4ac/raw/chatbox.releases.json",
+                "https://gist.githubusercontent.com/captain-miao/3832ae4134bde608d7b7cf16ca61f4ac/raw"
             ],
             "dialog": true,
             "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNCODVDQjcxMDU4RDI0OEQKUldTTkpJMEZjY3VGTzd3MHk4VHN1YUFJRmpSakJYeGc3dWRxc1F1eDFSY1pnN3p4eUxGamR6NTkK"
