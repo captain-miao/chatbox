@@ -3,9 +3,16 @@ import * as wordCount from './utils';
 import { createParser } from 'eventsource-parser'
 
 function generateTargetUrl(host: string): string {
-    const defaultHost = "https://api.openai.com";
-    return host !== defaultHost ? host : `${host}/v1/chat/completions`;
-}
+    const url = new URL(host);
+    if (url.pathname === "/" && url.search === "") {
+      // 如果host没有path或query参数，则使用默认路径
+      return `${host}/v1/chat/completions`;
+    } else {
+      // 否则使用host作为目标URL
+      return host;
+    }
+  }
+  
 
 export interface OnTextCallbackResult {
     // response content
