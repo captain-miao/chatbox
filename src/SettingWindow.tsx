@@ -115,6 +115,24 @@ export default function SettingWindow(props: Props) {
                     onChange={(e) => setSettingsEdit({ ...settingsEdit, openaiKey: e.target.value.trim() })}
                 />
                 <FormControl fullWidth variant="outlined" margin="dense">
+                <TextField
+                    margin="dense"
+                    label={t('api host or url')}
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    value={settingsEdit.apiHost}
+                    onChange={(e) => setSettingsEdit({ ...settingsEdit, apiHost: e.target.value.trim() })}
+                />
+                {
+                    !settingsEdit.apiHost.startsWith('http') && (
+                        <Alert severity="error">
+                            {t('proxy must use')} <b> {t('http')} </b> {t('or')} <b> {t('https')} </b> {t('proxy api host alert end')}
+                        </Alert>
+                    )
+                }
+                </FormControl>
+                <FormControl fullWidth variant="outlined" margin="dense">
                     <InputLabel htmlFor="language-select">{t('language')}</InputLabel>
                     <Select
                         label="language"
@@ -148,48 +166,50 @@ export default function SettingWindow(props: Props) {
                         onChange={(e, checked) => setSettingsEdit({ ...settingsEdit, showTokenCount: checked })}
                     />
                 </FormGroup>
-                <Accordion>
-                    <AccordionSummary aria-controls="panel1a-content">
-                        <Typography>{t('proxy')}</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                        <TextField
-                            margin="dense"
-                            label={t('api host')}
-                            type="text"
-                            fullWidth
-                            variant="outlined"
-                            value={settingsEdit.apiHost}
-                            onChange={(e) => setSettingsEdit({ ...settingsEdit, apiHost: e.target.value.trim() })}
-                        />
 
-                        {
-                            !settingsEdit.apiHost.match(/^(https?:\/\/)?api.openai.com(:\d+)?$/) && (
-                                <Alert severity="warning">
-                                    {t('your api key and all messages will be sent to')} <b>{settingsEdit.apiHost}</b>.
-                                    {t('please confirm that you trust this address. otherwise, there is a risk of api key and data leakage.')}
-                                    <Button onClick={() => setSettingsEdit({ ...settingsEdit, apiHost: getDefaultSettings().apiHost })}>{t('reset')}</Button>
-                                </Alert>
-                            )
-                        }
-                        {
-                            settingsEdit.apiHost.startsWith('http://') && (
-                                <Alert severity="warning">
-                                    {t('all data transfers are being conducted through the')} <b>{t('http')}</b> {t('protocol, which may lead to the risk of api key and data leakage.')}
-                                    {t('unless you are completely certain and understand the potential risks involved, please consider using the')} <b>{t('https')}</b> {t('protocol instead.')}
-                                </Alert>
-                            )
-                        }
-                        {
-                            !settingsEdit.apiHost.startsWith('http') && (
-                                <Alert severity="error">
-                                    {t('proxy must use')} <b> {t('http')} </b> {t('or')} <b> {t('https')} </b> {t('proxy api host alert end')}
-                                </Alert>
-                            )
-                        }
+                {/*<Accordion>*/}
+                {/*    <AccordionSummary aria-controls="panel1a-content">*/}
+                {/*        <Typography>{t('proxy')}</Typography>*/}
+                {/*    </AccordionSummary>*/}
+                {/*    <AccordionDetails>*/}
+                {/*        <TextField*/}
+                {/*            margin="dense"*/}
+                {/*            label={t('api host')}*/}
+                {/*            type="text"*/}
+                {/*            fullWidth*/}
+                {/*            variant="outlined"*/}
+                {/*            value={settingsEdit.apiHost}*/}
+                {/*            onChange={(e) => setSettingsEdit({ ...settingsEdit, apiHost: e.target.value.trim() })}*/}
+                {/*        />*/}
 
-                    </AccordionDetails>
-                </Accordion>
+                {/*        {*/}
+                {/*            !settingsEdit.apiHost.match(/^(https?:\/\/)?api.openai.com(:\d+)?$/) && (*/}
+                {/*                <Alert severity="warning">*/}
+                {/*                    {t('your api key and all messages will be sent to')} <b>{settingsEdit.apiHost}</b>.*/}
+                {/*                    {t('please confirm that you trust this address. otherwise, there is a risk of api key and data leakage.')}*/}
+                {/*                    <Button onClick={() => setSettingsEdit({ ...settingsEdit, apiHost: getDefaultSettings().apiHost })}>{t('reset')}</Button>*/}
+                {/*                </Alert>*/}
+                {/*            )*/}
+                {/*        }*/}
+                {/*        {*/}
+                {/*            settingsEdit.apiHost.startsWith('http://') && (*/}
+                {/*                <Alert severity="warning">*/}
+                {/*                    {t('all data transfers are being conducted through the')} <b>{t('http')}</b> {t('protocol, which may lead to the risk of api key and data leakage.')}*/}
+                {/*                    {t('unless you are completely certain and understand the potential risks involved, please consider using the')} <b>{t('https')}</b> {t('protocol instead.')}*/}
+                {/*                </Alert>*/}
+                {/*            )*/}
+                {/*        }*/}
+                {/*        {*/}
+                {/*            !settingsEdit.apiHost.startsWith('http') && (*/}
+                {/*                <Alert severity="error">*/}
+                {/*                    {t('proxy must use')} <b> {t('http')} </b> {t('or')} <b> {t('https')} </b> {t('proxy api host alert end')}*/}
+                {/*                </Alert>*/}
+                {/*            )*/}
+                {/*        }*/}
+
+                {/*    </AccordionDetails>*/}
+                {/*</Accordion>*/}
+
                 <Accordion>
                     <AccordionSummary
                         aria-controls="panel1a-content"
