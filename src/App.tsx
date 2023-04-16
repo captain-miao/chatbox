@@ -312,7 +312,7 @@ function Main() {
 
                             <MenuItem onClick={() => {
                                 setNeedCheckUpdate(false)
-                                api.openLink('https://github.com/Bin-Huang/chatbox/releases')
+                                api.openLink('https://github.com/captain-miao/chatbox/releases')
                             }}>
                                 <ListItemIcon>
                                     <IconButton>
