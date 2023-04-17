@@ -29,6 +29,12 @@
 ![](./doc/demo2.png)
 ![](./doc/demo3.gif)
 
+## 编译工程
+``` shell
+# on Mac
+npm run tauri build
+```
+
 ## 特性
 
 - 和 ChatGPT Plus 一样快
