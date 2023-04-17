@@ -1,7 +1,7 @@
 {
   "name": "chatbox",
   "productName": "chatbox",
-  "version": "0.3.9",
+  "version": "0.4.0",
   "private": true,
   "description": "a cross-platform desktop client for ChatGPT API (OpenAI API)",
   "scripts": {
