@@ -30,12 +30,6 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import CopyAllIcon from '@mui/icons-material/CopyAll';
 import './styles/Block.scss'
 
-// copy button html content
-// join at markdown-it parsed
-const getCodeCopyButtonHTML = () => {
-    return `<div class="copy-action">${getI18n().t('copy')}</div>`;
-};
-
 const md = new MarkdownIt({
     linkify: true,
     breaks: true,
@@ -53,9 +47,10 @@ const md = new MarkdownIt({
         }
 
         // join actions html string
+        lang = (lang || 'txt').toUpperCase()
         return [
             '<div class="code-block-wrapper">',
-            getCodeCopyButtonHTML(),
+            `<div class="code-header"><span class="code-lang">${lang}</span><div class="copy-action">${getI18n().t('copy')}</div></div>`,
             '<pre class="hljs code-block">',
             `<code>${content}</code>`,
             '</pre>',
@@ -73,7 +68,6 @@ export interface Props {
     showWordCount: boolean
     showTokenCount: boolean
     showModelName: boolean
-    modelName: string
     setMsg: (msg: Message) => void
     delMsg: () => void
     refreshMsg: () => void
@@ -108,7 +102,7 @@ function _Block(props: Props) {
 
     const tips: string[] = []
     if (props.showModelName) {
-        tips.push(`model: ${props.modelName}`)
+        tips.push(`model: ${props.msg.model || 'unknown'}`)
     }
     if (props.showWordCount) {
         tips.push(`word count: ${wordCount.countWord(msg.content)}`)
@@ -135,7 +129,11 @@ function _Block(props: Props) {
             className={[
                 'msg-block',
                 msg.generating ? 'rendering' : 'render-done',
-                msg?.role === OpenAIRoleEnum.Assistant ? 'assistant-msg' : 'user-msg',
+                {
+                    user: 'user-msg',
+                    system: 'system-msg',
+                    assistant: 'assistant-msg',
+                }[msg?.role || 'user']
             ].join(' ')}
         >
             <Grid container spacing={2}>
@@ -342,5 +340,5 @@ const StyledMenu = styled((props: MenuProps) => (
 export default function Block(props: Props) {
     return useMemo(() => {
         return <_Block {...props} />
-    }, [props.msg, props.showWordCount, props.showTokenCount, props.showModelName, props.modelName])
+    }, [props.msg, props.showWordCount, props.showTokenCount, props.showModelName])
 }

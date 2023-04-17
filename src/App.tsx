@@ -18,12 +18,16 @@ import AddIcon from '@mui/icons-material/Add';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import * as prompts from './prompts';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
+import Save from '@mui/icons-material/Save'
 import CleanWidnow from './CleanWindow';
 import * as api from './api';
 import { ThemeSwitcherProvider } from './theme/ThemeSwitcher';
 import { useTranslation } from "react-i18next";
 import icon from './icon.png'
+import { save } from '@tauri-apps/api/dialog';
+import { writeTextFile } from '@tauri-apps/api/fs';
 import "./ga"
+import "./styles/App.scss"
 
 import type { DragEndEvent } from '@dnd-kit/core';
 import {
@@ -151,7 +155,7 @@ function Main() {
         const target: HTMLElement = e.target as HTMLElement;
 
         const isCopyActionClassName = target.className === 'copy-action';
-        const isCodeBlockParent = target.parentElement?.className === 'code-block-wrapper';
+        const isCodeBlockParent = target.parentElement?.parentElement?.className === 'code-block-wrapper';
 
         // check is copy action button
         if (!(isCopyActionClassName && isCodeBlockParent)) {
@@ -159,7 +163,7 @@ function Main() {
         }
 
         // got codes
-        const content = target?.parentNode?.querySelector('code')?.innerText ?? '';
+        const content = target?.parentNode?.parentNode?.querySelector('code')?.innerText ?? '';
 
         // do copy
         // * thats lines copy from copy block content action
@@ -189,7 +193,7 @@ function Main() {
             store.settings.apiHost,
             store.settings.maxContextSize,
             store.settings.maxTokens,
-            session.model,
+            store.settings.model,
             prompts.nameConversation(session.messages.slice(0, 3)),
             ({ text: name }) => {
                 name = name.replace(/['"“”]/g, '')
@@ -201,6 +205,20 @@ function Main() {
             }
         )
     }
+    const saveSession = async (session:Session) => {
+        const filePath = await save({
+            filters: [{
+              name: 'Export',
+              extensions: ['md']
+            }]
+          });
+        if(filePath){
+            const content = session.messages
+                .map(msg => `**${msg.role}**:\n${msg.content}`)
+                .join('\n\n--------------------\n\n')
+            await writeTextFile(filePath!!, content)
+        }
+    }
 
     const generate = async (session: Session, promptMsgs: Message[], targetMsg: Message) => {
         messageScrollRef.current = { msgId: targetMsg.id, smooth: false }
@@ -209,8 +227,7 @@ function Main() {
             store.settings.apiHost,
             store.settings.maxContextSize,
             store.settings.maxTokens,
-            session.model,
-            // store.settings.model,
+            store.settings.model,
             promptMsgs,
             ({ text, cancel }) => {
                 for (let i = 0; i < session.messages.length; i++) {
@@ -219,6 +236,7 @@ function Main() {
                             ...session.messages[i],
                             content: text,
                             cancel,
+                            model: store.settings.model,
                             generating: true
                         }
                         break;
@@ -232,6 +250,7 @@ function Main() {
                         session.messages[i] = {
                             ...session.messages[i],
                             content: t('api request failed:') + ' \n```\n' + err.message + '\n```',
+                            model: store.settings.model,
                             generating: false
                         }
                         break
@@ -268,7 +287,7 @@ function Main() {
     }
 
     return (
-        <Box sx={{ height: '100vh' }}>
+        <Box className='App'>
             <Grid container sx={{
                 flexWrap: 'nowrap',
                 height: '100%',
@@ -339,7 +358,7 @@ function Main() {
                                                 }}
                                                 deleteMe={() => store.deleteChatSession(session)}
                                                 copyMe={() => {
-                                                    const newSession = createSession(session.model, session.name + ' copied')
+                                                    const newSession = createSession(session.name + ' copied')
                                                     newSession.messages = session.messages
                                                     store.createChatSession(newSession, ix)
                                                 }}
@@ -428,6 +447,12 @@ function Main() {
                                 >
                                     <CleaningServicesIcon />
                                 </IconButton>
+                                <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}
+                                    onClick={() => saveSession(store.currentSession)}
+                                >
+                                    <Save />
+                                </IconButton>
+                                
                             </Toolbar>
                             <Divider />
                         </Box>
@@ -449,7 +474,6 @@ function Main() {
                                         showWordCount={store.settings.showWordCount || false}
                                         showTokenCount={store.settings.showTokenCount || false}
                                         showModelName={store.settings.showModelName || false}
-                                        modelName={store.currentSession.model}
                                         setMsg={(updated) => {
                                             store.currentSession.messages = store.currentSession.messages.map((m) => {
                                                 if (m.id === updated.id) {
@@ -519,6 +543,9 @@ function Main() {
                     save={(settings) => {
                         store.setSettings(settings)
                         setOpenSettingWindow(false)
+                        if (settings.fontSize !== store.settings.fontSize) {
+                            store.addToast(t('font size changed, effective after next launch'))
+                        }
                     }}
                     close={() => setOpenSettingWindow(false)}
                 />
