@@ -1,4 +1,4 @@
-name: 'publish'
+name: 'win_app_pub'
 on:
   workflow_dispatch:
   push:
