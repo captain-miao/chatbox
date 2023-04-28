@@ -3,12 +3,12 @@ import Block from './Block'
 import * as client from './client'
 import SessionItem from './SessionItem'
 import {
-    Toolbar, Box, Badge, Snackbar,
+    Toolbar, Box, Badge, Snackbar, Chip,
     List, ListSubheader, ListItemText, MenuList,
     IconButton, Button, Stack, Grid, MenuItem, ListItemIcon, Typography, Divider,
     TextField,
 } from '@mui/material';
-import { Session, createSession, Message, createMessage } from './types'
+import { Session, createSession, Message, createMessage, SponsorAd } from './types'
 import useStore from './store'
 import SettingWindow from './SettingWindow'
 import ChatConfigWindow from './ChatConfigWindow'
@@ -20,13 +20,16 @@ import * as prompts from './prompts';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import Save from '@mui/icons-material/Save'
 import CleanWidnow from './CleanWindow';
+import AboutWindow from './AboutWindow';
 import * as api from './api';
 import { ThemeSwitcherProvider } from './theme/ThemeSwitcher';
 import { useTranslation } from "react-i18next";
 import icon from './icon.png'
 import { save } from '@tauri-apps/api/dialog';
 import { writeTextFile } from '@tauri-apps/api/fs';
-import "./ga"
+import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import * as remote from './remote'
 import "./styles/App.scss"
 
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -68,19 +71,17 @@ function Main() {
         })
     );
 
-    const reversedSessions = [...store.chatSessions].reverse()
+    const sortedSessions = sortSessions(store.chatSessions)
     function handleDragEnd(event: DragEndEvent) {
         const {active, over} = event;
         if (!over) {
             return
         }
-        
         if (active.id !== over.id) {
-            const oldIndex = reversedSessions.findIndex(({id}) => id === active.id);
-            const newIndex = reversedSessions.findIndex(({id}) => id === over.id);
-
-            const newReversed = arrayMove(reversedSessions, oldIndex, newIndex);
-            store.setSessions(newReversed.reverse())
+            const oldIndex = sortedSessions.findIndex(({id}) => id === active.id);
+            const newIndex = sortedSessions.findIndex(({id}) => id === over.id);
+            const newReversed = arrayMove(sortedSessions, oldIndex, newIndex);
+            store.setSessions(sortSessions(newReversed))
         }
     }
     
@@ -92,6 +93,9 @@ function Main() {
             setOpenSettingWindow(true)
         }
     }, [store.needSetting])
+
+    // 是否展示相关信息的窗口
+    const [openAboutWindow, setOpenAboutWindow] = React.useState(false);
 
     const messageListRef = useRef<HTMLDivElement>(null)
     const messageScrollRef = useRef<{ msgId: string, smooth?: boolean } | null>(null)
@@ -286,6 +290,15 @@ function Main() {
         }
     }
 
+    const [showSponsorAD, setShowSponsorAD] = useState(true)
+    const [sponsorAD, setSponsorAD] = useState<SponsorAd | null>(null)
+    useEffect(() => {
+        (async () => {
+            const ad = await remote.getSponsorAd()
+            setSponsorAD(ad)
+        })()
+    }, [store.currentSession.id])
+
     return (
         <Box className='App'>
             <Grid container sx={{
@@ -322,10 +335,8 @@ function Main() {
                         <MenuList
                             sx={{
                                 width: '100%',
-                                // bgcolor: 'background.paper',
                                 position: 'relative',
                                 overflow: 'auto',
-                                // height: '30vh',
                                 height: '60vh',
                                 '& ul': { padding: 0 },
                             }}
@@ -337,7 +348,6 @@ function Main() {
                             }
                             component="div"
                             ref={sessionListRef}
-                        // dense
                         >
                             <DndContext
                                 modifiers={[restrictToVerticalAxis]}
@@ -345,9 +355,9 @@ function Main() {
                                 collisionDetection={closestCenter}
                                 onDragEnd={handleDragEnd}
                             >
-                                <SortableContext items={reversedSessions} strategy={verticalListSortingStrategy}>
+                                <SortableContext items={sortedSessions} strategy={verticalListSortingStrategy}>
                                 {
-                                    reversedSessions.map((session, ix) => (
+                                    sortedSessions.map((session, ix) => (
                                         <SortableItem key={session.id} id={session.id}>
                                             <SessionItem key={session.id}
                                                 selected={store.currentSession.id === session.id}
@@ -361,6 +371,12 @@ function Main() {
                                                     const newSession = createSession(session.name + ' copied')
                                                     newSession.messages = session.messages
                                                     store.createChatSession(newSession, ix)
+                                                }}
+                                                switchStarred={() => {
+                                                    store.updateChatSession({
+                                                        ...session,
+                                                        starred: !session.starred
+                                                    })
                                                 }}
                                                 editMe={() => setConfigureChatConfig(session)}
                                             />
@@ -400,19 +416,17 @@ function Main() {
                                 </Typography>
                             </MenuItem>
 
-                            <MenuItem onClick={() => {
-                                api.openLink('https://github.com/captain-miao/chatbox/releases')
-                            }}>
+                            <MenuItem onClick={() => setOpenAboutWindow(true)}>
                                 <ListItemIcon>
                                     <IconButton>
                                         <InfoOutlinedIcon fontSize="small" />
                                     </IconButton>
                                 </ListItemIcon>
                                 <ListItemText>
-                                    <Badge color="primary" variant="dot" invisible={true}
+                                    <Badge color="primary" variant="dot" invisible={!store.needCheckUpdate}
                                     sx={{ paddingRight: '8px' }} >
                                         <Typography sx={{ opacity: 0.5 }}>
-                                            {t('version')}: {store.version}
+                                            {t('About')} ({store.version})
                                         </Typography>
                                     </Badge>
                                 </ListItemText>
@@ -442,19 +456,39 @@ function Main() {
                                         {store.currentSession.name}
                                     </span>
                                 </Typography>
+                                {
+                                    showSponsorAD && sponsorAD && (
+                                        <Chip size='small'
+                                            sx={{
+                                                maxWidth: '400px',
+                                                height: 'auto',
+                                                '& .MuiChip-label': {
+                                                    display: 'block',
+                                                    whiteSpace: 'normal',
+                                                },
+                                                borderRadius: '8px',
+                                                marginRight: '25px',
+                                                opacity: 0.6,
+                                            }}
+                                            icon={<CampaignOutlinedIcon />}
+                                            deleteIcon={<CancelOutlinedIcon />}
+                                            onDelete={() => setShowSponsorAD(false)}
+                                            onClick={() => api.openLink(sponsorAD.url)}
+                                            label={sponsorAD.text}
+                                        />
+                                    )
+                                }
                                 <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}
                                     onClick={() => setSessionClean(store.currentSession)}
                                 >
                                     <CleaningServicesIcon />
                                 </IconButton>
-                                <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}
+                                <IconButton edge="start" color="inherit" aria-label="menu" sx={{}}
                                     onClick={() => saveSession(store.currentSession)}
                                 >
                                     <Save />
                                 </IconButton>
-                                
                             </Toolbar>
-                            <Divider />
                         </Box>
                         <List
                             className='scroll'
@@ -548,6 +582,9 @@ function Main() {
                         }
                     }}
                     close={() => setOpenSettingWindow(false)}
+                />
+                <AboutWindow open={openAboutWindow} version={store.version} lang={store.settings.language}
+                    close={() => setOpenAboutWindow(false)}
                 />
                 {
                     configureChatConfig !== null && (
@@ -649,6 +686,19 @@ function MessageInput(props: {
             </Stack>
         </form>
     )
+}
+
+function sortSessions(sessions: Session[]): Session[] {
+    let reversed: Session[] = []
+    let pinned: Session[] = []
+    for (const sess of sessions) {
+        if (sess.starred) {
+            pinned.push(sess)
+            continue
+        }
+        reversed.unshift(sess)
+    }
+    return pinned.concat(reversed)
 }
 
 export default function App() {
