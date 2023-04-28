@@ -32,13 +32,13 @@ export default function AboutWindow(props: Props) {
                 <Stack spacing={2} direction="row" sx={{ justifyContent: 'center', marginTop: '30px' }}>
                     <Badge color="primary" variant="dot" invisible={false}>
                         <Button variant="outlined"
-                            onClick={() => api.openLink(`https://chatboxapp.xyz/redirect_app/check_update/${props.lang}`)}
+                            onClick={() => api.openLink(`https://github.com/captain-miao/chatbox/releases`)}
                         >
                             {t('Check Update')}
                         </Button>
                     </Badge>
                     <Button variant="outlined"
-                        onClick={() => api.openLink(`https://chatboxapp.xyz/redirect_app/homepage/${props.lang}`)}
+                        onClick={() => api.openLink(`https://github.com/captain-miao/chatbox`)}
                     >
                         {t('Homepage')}
                     </Button>

@@ -42,7 +42,7 @@ async function main() {
     let version = process.argv[2]
     let storageFlag = process.argv[3] || 'github'
 
-    const res = await axios.get('https://api.github.com/repos/Bin-Huang/chatbox/releases')
+    const res = await axios.get('https://api.github.com/repos/captain-miao/chatbox/releases')
     const release = version ? res.data.find(r => r.tag_name.endsWith(version)) : res.data[0]
 
     data.version = release.tag_name.replace('Chatbox-', '')
